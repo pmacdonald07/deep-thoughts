@@ -7,6 +7,7 @@ import {
   createHttpLink,
 } from "@apollo/client";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { setContext } from "@apollo/client/link/context";
 
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -22,8 +23,20 @@ const httpLink = createHttpLink({
   uri: "/graphql",
 });
 
+// Because we're not using the first parameter, but we still need to access the second one,
+// we can use an underscore _ to serve as a placeholder for the first parameter.
+const authLink = setContext((_, { headers }) => {
+  const token = localStorage.getItem("id_token");
+  return {
+    headers: {
+      ...headers,
+      authorization: token ? `Bearer ${token}` : "",
+    },
+  };
+});
+
 const client = new ApolloClient({
-  link: httpLink,
+  link: authLink.concat(httpLink),
   cache: new InMemoryCache(),
 });
 
